@@ -1,0 +1,280 @@
+syntax = "proto3";
+
+package bbgo;
+
+option go_package = "../pb";
+
+service MarketDataService {
+  rpc Subscribe(SubscribeRequest) returns (stream MarketData) {}
+  rpc QueryKLines(QueryKLinesRequest) returns (QueryKLinesResponse) {}
+}
+
+service UserDataService {
+  rpc Subscribe(UserDataRequest) returns (stream UserData) {}
+}
+
+service TradingService {
+  // request-response
+  rpc SubmitOrder(SubmitOrderRequest) returns (SubmitOrderResponse) {}
+  rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse) {}
+  rpc QueryOrder(QueryOrderRequest) returns (QueryOrderResponse) {}
+  rpc QueryOrders(QueryOrdersRequest) returns (QueryOrdersResponse) {}
+  rpc QueryTrades(QueryTradesRequest) returns (QueryTradesResponse) {}
+}
+
+enum Event {
+  UNKNOWN = 0;
+  SUBSCRIBED = 1;
+  UNSUBSCRIBED = 2;
+  SNAPSHOT = 3;
+  UPDATE = 4;
+  AUTHENTICATED = 5;
+  ERROR = 99;
+}
+
+enum Channel {
+  BOOK = 0;
+  TRADE = 1;
+  TICKER = 2;
+  KLINE = 3;
+  BALANCE = 4;
+  ORDER = 5;
+}
+
+enum Side {
+  BUY = 0;
+  SELL = 1;
+}
+
+enum OrderType {
+  MARKET = 0;
+  LIMIT = 1;
+  STOP_MARKET = 2;
+  STOP_LIMIT = 3;
+  POST_ONLY = 4;
+  IOC_LIMIT = 5;
+}
+
+message Empty {}
+
+message Error {
+  int64 error_code = 1;
+  string error_message = 2;
+}
+
+message UserDataRequest {
+  string session = 1;
+}
+
+message UserData {
+  string session = 1;
+  string exchange = 2;
+  Channel channel = 3;  // trade, order, balance
+  Event event = 4;      // snapshot, update ...
+  repeated Balance balances = 5;
+  repeated Trade trades = 6;
+  repeated Order orders = 7;
+}
+
+message SubscribeRequest {
+  repeated Subscription subscriptions = 1;
+}
+
+message Subscription {
+  string exchange = 1;
+  Channel channel = 2;  // book, trade, ticker
+  string symbol = 3;
+  string depth = 4; // depth is for book, valid values are full, medium, 1, 5 and 20
+  string interval = 5; // interval is for kline channel
+}
+
+message MarketData {
+  string session = 1;
+  string exchange = 2;
+  string symbol = 3;
+  Channel channel = 4;  // book, trade, ticker, user
+  Event event = 5;      // snapshot or update
+  Depth depth = 6; // depth: used by book
+  KLine kline = 7;
+  Ticker ticker = 9; // market ticker
+  repeated Trade trades = 8; // market trades
+  int64 subscribed_at = 12;
+  Error error = 13;
+}
+
+
+message Depth {
+  string exchange = 1;
+  string symbol = 2;
+  repeated PriceVolume asks = 3;
+  repeated PriceVolume bids = 4;
+}
+
+message PriceVolume {
+  string price = 1;
+  string volume = 2;
+}
+
+// https://maicoin.github.io/max-websocket-docs/#/private_channels?id=trade-response
+// https://maicoin.github.io/max-websocket-docs/#/public_trade?id=success-response
+message Trade {
+  string session = 1;
+  string exchange = 2;
+  string symbol = 3;
+  string id = 4;
+  string price = 5;
+  string quantity = 6;
+  int64 created_at = 7;
+  Side side = 8;
+  string fee_currency = 9;
+  string fee = 10;
+  bool maker = 11;
+}
+
+// https://maicoin.github.io/max-websocket-docs/#/public_ticker?id=success-response
+message Ticker {
+  string exchange = 1;
+  string symbol = 2;
+  double open = 3;
+  double high = 4;
+  double low = 5;
+  double close = 6;
+  double volume = 7;
+}
+
+// https://maicoin.github.io/max-websocket-docs/#/private_channels?id=snapshot
+message Order {
+  string exchange = 1;
+  string symbol = 2;
+  string id = 3;
+  Side side = 4;
+  OrderType order_type = 5;
+  string price = 6;
+  string stop_price = 7;
+  string status = 9;
+  string quantity = 11;
+  string executed_quantity = 12;
+  string client_order_id = 14;
+  int64 group_id = 15;
+  int64 created_at = 10;
+}
+
+message SubmitOrder {
+  string session = 1;
+  string exchange = 2;
+  string symbol = 3;
+  Side side = 4;
+  string price = 6;
+  string quantity = 5;
+  string stop_price = 7;
+  OrderType order_type = 8;
+  string client_order_id = 9;
+  int64 group_id = 10;
+}
+
+// https://maicoin.github.io/max-websocket-docs/#/private_channels?id=account-response
+message Balance {
+  string session = 1;
+  string exchange = 2;
+  string currency = 3;
+  string available = 4;
+  string locked = 5;
+  string borrowed = 6;
+}
+
+message SubmitOrderRequest {
+  string session = 1;
+  repeated SubmitOrder submit_orders = 2;
+}
+
+message SubmitOrderResponse {
+  string session = 1;
+  repeated Order orders = 2;
+  Error error = 3;
+}
+
+message CancelOrderRequest {
+  string session = 1;
+  string order_id = 2;
+  string client_order_id = 3;
+}
+
+message CancelOrderResponse {
+  Order order = 1;
+  Error error = 2;
+}
+
+message QueryOrderRequest {
+  string session = 1;
+  string id = 2;
+  string client_order_id = 3;
+}
+
+message QueryOrderResponse {
+  Order order = 1;
+  Error error = 2;
+}
+
+message QueryOrdersRequest {
+  string session = 1;
+  string symbol = 2;
+  repeated string state = 3;
+  string order_by = 4;
+  int64 group_id = 5;
+  bool pagination = 6;
+  int64 page = 7;
+  int64 limit = 8;
+  int64 offset = 9;
+}
+
+message QueryOrdersResponse {
+  repeated Order orders = 1;
+  Error error = 2;
+}
+
+message QueryTradesRequest {
+  string exchange = 1;
+  string symbol = 2;
+  int64 timestamp = 3;
+  int64 from = 4;
+  int64 to = 5;
+  string order_by = 6;
+  bool pagination = 7;
+  int64 page = 8;
+  int64 limit = 9;
+  int64 offset = 10;
+}
+
+message QueryTradesResponse {
+  repeated Trade trades = 1;
+  Error error = 2;
+}
+
+message QueryKLinesRequest {
+  string exchange = 1;
+  string symbol = 2;
+  string interval = 3;  // time period of K line in minute
+  int64 start_time = 4;
+  int64 end_time = 5;
+  int64 limit = 6;
+}
+
+message QueryKLinesResponse {
+  repeated KLine klines = 1;
+  Error error = 2;
+}
+
+message KLine {
+  string session = 1;
+  string exchange = 2;
+  string symbol = 3;
+  string open = 4;
+  string high = 5;
+  string low = 6;
+  string close = 7;
+  string volume = 8;
+  string quote_volume = 9;
+  int64 start_time = 10;
+  int64 end_time = 11;
+  bool closed = 12;
+}

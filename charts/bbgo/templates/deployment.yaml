@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bbgo.fullname" . }}
+  labels:
+    {{- include "bbgo.labels" . | nindent 4 }}
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  strategy:
+    # we need to cleanly cancel all the orders, so we use Recreate strategy here
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "bbgo.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "bbgo.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bbgo.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+          {{- if .Values.metrics.enabled }}
+          - "--metrics"
+          - "--metrics-port"
+          - {{ .Values.metrics.port | quote }}
+          {{- end }}
+          - "run"
+          - "--config"
+          - "/config/bbgo.yaml"
+          - "--no-compile"
+          {{- if .Values.webserver.enabled }}
+          - "--enable-webserver"
+          {{- end }}
+          {{- if .Values.grpc.enabled }}
+          - "--enable-grpc"
+          - "--grpc-bind"
+          - {{ printf ":%d" (.Values.grpc.port | int) | default ":50051" | quote }}
+          {{- end }}
+          {{- if .Values.debug.enabled }}
+          - "--debug"
+          {{- end }}
+
+          ports:
+          {{- if .Values.webserver.enabled }}
+          - name: http
+            containerPort: 8080
+            protocol: TCP
+          {{- end }}
+          {{- if .Values.grpc.enabled }}
+          - name: grpc
+            containerPort: {{ .Values.grpc.port | default 50051 }}
+            protocol: TCP
+          {{- end }}
+          {{- if .Values.metrics.enabled }}
+          - name: metrics
+            containerPort: 9090
+            protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+          {{- end }}
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - name: config-volume
+            mountPath: /config
+
+          # the "env" entries will override the environment variables from envFrom.
+          envFrom:
+          - secretRef:
+              name: {{ .Values.dotenv.secret | default .Release.Name }}
+
+      volumes:
+      - name: config-volume
+        configMap:
+        {{- if .Values.existingConfigMap }}
+          name: {{ .Values.existingConfigMap }}
+        {{- else }}
+          name: {{ include "bbgo.fullname" . }}
+        {{- end }}
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,50 @@
+---
+sessions:
+  max:
+    exchange: max
+    envVarPrefix: max
+
+riskControls:
+  # This is the session-based risk controller, which let you configure different risk controller by session.
+  sessionBased:
+    # "max" is the session name that you want to configure the risk control
+    max:
+      # orderExecutor is one of the risk control
+      orderExecutor:
+        # symbol-routed order executor
+        bySymbol:
+          USDTTWD:
+            # basic risk control order executor
+            basic:
+              minQuoteBalance: 100.0  # keep 100 twd
+              maxBaseAssetBalance: 100_000.0
+              minBaseAssetBalance: 1_000.0
+              maxOrderAmount: 2000.0 # 1000 twd
+
+backtest:
+  # for testing max draw down (MDD) at 03-12
+  # see here for more details
+  # https://www.investopedia.com/terms/m/maximum-drawdown-mdd.asp
+  startTime: "2021-01-01"
+  endTime: "2021-01-30"
+  symbols:
+  - USDTTWD
+  account:
+    max:
+      makerFeeRate: 15
+      takerFeeRate: 15
+      balances:
+        BTC: 0.0
+        USDT: 10_000.0
+        TWD: 100_000.0
+
+exchangeStrategies:
+- on: max
+  grid:
+    symbol: USDTTWD
+    quantity: 10.0 # 10 USDT per grid
+    gridNumber: 100  # 50 GRID, Total Amount will be 10 USDT * 50 GRID = 500 USDT
+    profitSpread: 0.1 # When buying USDT at 28.1, we will sell it at 28.1 + 0.1 = 28.2, When selling USDT at 28.1, we will buy it back at 28.1 - 0.1 = 28.0
+    upperPrice: 28.90
+    lowerPrice: 27.90
+    long: true # long mode means we don't keep cash when we sell usdt, we will use the same amount of twd to buy more usdt back

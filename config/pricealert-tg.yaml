@@ -1,0 +1,12 @@
+---
+sessions:
+  binance:
+    exchange: binance
+    envVarPrefix: binance
+
+exchangeStrategies:
+- on: binance
+  pricealert:
+    symbol: "BTCUSDT"
+    interval: "1m"
+    minChange: 300

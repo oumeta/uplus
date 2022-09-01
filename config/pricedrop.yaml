@@ -1,0 +1,61 @@
+---
+notifications:
+  slack:
+    defaultChannel: "bbgo"
+    errorChannel: "bbgo-error"
+
+reportPnL:
+- averageCostBySymbols:
+  - "BTCUSDT"
+  - "ETHUSDT"
+  - "BNBUSDT"
+  of: binance
+  when:
+  - "@daily"
+  - "@hourly"
+
+sessions:
+  binance:
+    exchange: binance
+    envVarPrefix: binance
+
+riskControls:
+  # This is the session-based risk controller, which let you configure different risk controller by session.
+  sessionBased:
+    # "max" is the session name that you want to configure the risk control
+    max:
+      # orderExecutors is one of the risk control
+      orderExecutor:
+        # symbol-routed order executor
+        bySymbol:
+          BTCUSDT:
+            # basic risk control order executor
+            basic:
+              minQuoteBalance: 1000.0
+              maxBaseAssetBalance: 2.0
+              minBaseAssetBalance: 0.1
+              maxOrderAmount: 100.0
+
+backtest:
+  # for testing max draw down (MDD) at 03-12
+  # see here for more details
+  # https://www.investopedia.com/terms/m/maximum-drawdown-mdd.asp
+  startTime: "2022-01-01"
+  endTime: "2022-01-15"
+  symbols:
+  - BTCUSDT
+  account:
+    binance:
+      makerFeeRate: 15
+      takerFeeRate: 15
+      balances:
+        BTC: 0.1
+        USDT: 10000.0
+
+exchangeStrategies:
+- on: binance
+  pricedrop:
+    symbol: "BTCUSDT"
+    interval: "1m"
+    baseQuantity: 0.001
+    minDropPercentage: -0.01

@@ -1,0 +1,21 @@
+---
+notifications:
+  slack:
+    defaultChannel: "bbgo"
+    errorChannel: "bbgo-error"
+
+exchangeStrategies:
+  - on: max
+    rebalance:
+      interval: 1d
+      baseCurrency: TWD
+      targetWeights:
+        BTC: 40%
+        ETH: 20%
+        MAX: 10%
+        USDT: 15%
+        TWD: 15%
+      threshold: 2%
+      # max amount to buy or sell per order
+      maxAmount: 10_000
+      dryRun: false

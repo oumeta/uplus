@@ -1,0 +1,93 @@
+---
+persistence:
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    db: 0
+
+sessions:
+  binance:
+    exchange: binance
+    envVarPrefix: binance
+    margin: true
+    isolatedMargin: true
+    isolatedMarginSymbol: BTCUSDT
+
+backtest:
+  sessions: [binance]
+  # for testing max draw down (MDD) at 03-12
+  # see here for more details
+  # https://www.investopedia.com/terms/m/maximum-drawdown-mdd.asp
+  startTime: "2022-01-01"
+  endTime: "2022-06-30"
+  symbols:
+  - BTCUSDT
+  accounts:
+    binance:
+      makerCommission: 10  # 0.15%
+      takerCommission: 15  # 0.15%
+      balances:
+        BTC: 1.0
+        USDT: 10000.0
+
+exchangeStrategies:
+- on: binance
+  supertrend:
+    symbol: BTCUSDT
+
+    # interval is how long do you want to update your order price and quantity
+    interval: 1m
+
+    # ATR window used by Supertrend
+    window: 34
+    # ATR Multiplier for calculating super trend prices, the higher, the stronger the trends are
+    supertrendMultiplier: 4
+
+    # leverage uses the account net value to calculate the order qty
+    leverage: 1.0
+    # quantity sets the fixed order qty, takes precedence over Leverage
+    #quantity: 0.5
+
+    # fastDEMAWindow and slowDEMAWindow are for filtering super trend noise
+    fastDEMAWindow: 40
+    slowDEMAWindow: 49
+
+    # Use linear regression as trend confirmation
+    linearRegression:
+      interval: 1m
+      window: 74
+
+    # TP according to ATR multiple, 0 to disable this
+    TakeProfitAtrMultiplier: 0
+
+    # Set SL price to the low of the triggering Kline
+    stopLossByTriggeringK: false
+
+    # TP/SL by reversed supertrend signal
+    stopByReversedSupertrend: false
+
+    # TP/SL by reversed DEMA signal
+    stopByReversedDema: false
+
+    # TP/SL by reversed linear regression signal
+    stopByReversedLinGre: false
+
+    exits:
+      # roiStopLoss is the stop loss percentage of the position ROI (currently the price change)
+      - roiStopLoss:
+          percentage: 4.5%
+      - protectiveStopLoss:
+          activationRatio: 3%
+          stopLossRatio: 2.5%
+          placeStopOrder: false
+      - protectiveStopLoss:
+          activationRatio: 7%
+          stopLossRatio: 3.5%
+          placeStopOrder: false
+      - trailingStop:
+          callbackRate: 4.5%
+          #activationRatio: 40%
+          minProfit: 9.5%
+          interval: 1m
+          side: both
+          closePosition: 100%

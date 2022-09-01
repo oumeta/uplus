@@ -1,0 +1,63 @@
+---
+sessions:
+  binance:
+    exchange: binance
+    envVarPrefix: binance
+    margin: true
+    isolatedMargin: true
+    isolatedMarginSymbol: GMTBUSD
+    # futures: true
+
+exchangeStrategies:
+- on: binance
+  pivotshort:
+    symbol: GMTBUSD
+    interval: 5m
+    window:  120
+
+    entry:
+      immediate: true
+      catBounceRatio: 1%
+      quantity: 20
+      numLayers: 3
+      marginOrderSideEffect: borrow
+
+    exits:
+    # roiStopLoss is the stop loss percentage of the position ROI (currently the price change)
+    - roiStopLoss:
+        percentage: 2%
+
+    # roiTakeProfit is used to force taking profit by percentage of the position ROI (currently the price change)
+    # force to take the profit ROI exceeded the percentage.
+    - roiTakeProfit:
+        percentage: 30%
+
+    - protectiveStopLoss:
+        activationRatio: 1%
+        stopLossRatio: 0.2%
+        placeStopOrder: true
+
+    # lowerShadowTakeProfit is used to taking profit when the (lower shadow height / low price) > lowerShadowRatio
+    # you can grab a simple stats by the following SQL:
+    # SELECT ((close - low) / close) AS shadow_ratio FROM binance_klines WHERE symbol = 'ETHUSDT' AND `interval` = '5m' AND start_time > '2022-01-01' ORDER BY shadow_ratio DESC LIMIT 20;
+    - lowerShadowTakeProfit:
+        ratio: 3%
+
+    # cumulatedVolumeTakeProfit is used to take profit when the cumulated quote volume from the klines exceeded a threshold
+    - cumulatedVolumeTakeProfit:
+        minQuoteVolume: 90_000_000
+        window: 5
+
+
+backtest:
+  sessions:
+    - binance
+  startTime: "2022-05-25"
+  endTime: "2022-06-03"
+  symbols:
+    - GMTBUSD
+  accounts:
+    binance:
+      balances:
+        GMT: 3_000.0
+        USDT: 3_000.0

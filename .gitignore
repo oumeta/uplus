@@ -1,0 +1,66 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Go template
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+.idea
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+/.mod
+/_mod
+
+/.env.local
+/.env.*.local
+/.env.production
+
+.DS_Store
+
+/build
+/dist
+/bbgow*
+
+/config/bbgo.yaml
+
+/localconfig
+
+/pkg/server/assets.go
+
+*.sqlite3
+node_modules
+output
+
+otp*png
+
+/.deploy
+
+testoutput
+
+*.swp
+/pkg/backtest/assets.go
+
+coverage.txt
+coverage_dum.txt
+
+*.cpuprofile
+
+.systemd.*
+
+/coverage.txt
+
+/otp.png
+
+/profile*.png
+
+*_local.yaml
+/.chglog/

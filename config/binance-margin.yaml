@@ -1,0 +1,27 @@
+---
+sessions:
+  # cross margin
+  binance_margin:
+    exchange: binance
+    margin: true
+
+  # isolated margin
+  binance_margin_linkusdt:
+    exchange: binance
+    margin: true
+    isolatedMargin: true
+    isolatedMarginSymbol: LINKUSDT
+
+  binance_margin_dotusdt:
+    exchange: binance
+    margin: true
+    isolatedMargin: true
+    isolatedMarginSymbol: DOTUSDT
+
+exchangeStrategies:
+
+- on: binance_margin_linkusdt
+  dummy:
+    symbol: LINKUSDT
+    interval: 1m
+

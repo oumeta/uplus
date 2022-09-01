@@ -1,0 +1,83 @@
+---
+
+sessions:
+  binance:
+    exchange: binance
+    envVarPrefix: binance
+
+# time godotenv -f .env.local -- go run ./cmd/bbgo backtest --base-asset-baseline --config config/schedule-ethusdt.yaml -v
+backtest:
+  startTime: "2021-08-01"
+  endTime: "2021-08-07"
+  symbols:
+  - ETHUSDT
+  account:
+    binance:
+      balances:
+        ETH: 1.0
+        USDT: 20_000.0
+
+riskControls:
+  # This is the session-based risk controller, which let you configure different risk controller by session.
+  sessionBased:
+    # "max" is the session name that you want to configure the risk control
+    max:
+      # orderExecutor is one of the risk control
+      orderExecutor:
+        # symbol-routed order executor
+        bySymbol:
+          ETHUSDT:
+            # basic risk control order executor
+            basic:
+              minQuoteBalance: 1000.0
+              maxBaseAssetBalance: 500.0
+              minBaseAssetBalance: 300.0
+              maxOrderAmount: 1000.0
+
+exchangeStrategies:
+
+- on: binance
+  schedule:
+    # trigger schedule per hour
+    # valid intervals are: 1m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 12h, 1d
+    interval: 1h
+
+    symbol: ETHUSDT
+    side: buy
+
+    # quantity is the quantity of the crypto (in base currency) you want to buy/sell
+    # quantity: 0.01
+
+    # amount is the quote quantity of the crypto (in quote currency), here is USDT.
+    # 11.0 means you want to buy ETH with 11 USDT.
+    # the quantity will be calculated automatically, according to the latest price
+    amount: 11.0
+
+    # belowMovingAverage is a special override (optional)
+    # execute order only when the closed price is below the moving average line.
+    # you can open the app to adjust your parameters here.
+    # the interval here could be different from the triggering interval.
+    belowMovingAverage:
+      type: EWMA
+      interval: 1h
+      window: 99
+
+      # you can override the default side
+      side: buy
+
+      # you can choose one of quantity or amount
+      # quantity: 0.05
+      # amount is how much quote balance you want to buy
+      # here 11.0 means you want to buy ETH with 11.0 USDT
+      # please note that crypto exchange requires you to submit an order above the min notional limit $10 usdt
+      amount: 11.0
+
+    # aboveMovingAverage is a special override (optional)
+    # aboveMovingAverage:
+    #   type: EWMA
+    #   interval: 1h
+    #   window: 99
+    #   side: sell
+    #   # quantity: 0.05
+    #   amount: 11.0
+

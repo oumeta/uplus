@@ -1,0 +1,57 @@
+---
+notifications:
+  slack:
+    defaultChannel: "dev-bbgo"
+    errorChannel: "bbgo-error"
+  # object routing rules
+  routing:
+    trade: "$symbol"
+    order: "$symbol"
+    submitOrder: "$session" # not supported yet
+
+sessions:
+  binance:
+    exchange: binance
+
+backtest:
+  startTime: "2021-09-01"
+  endTime: "2021-11-01"
+  sessions:
+  - binance
+  symbols:
+  - LINKUSDT
+  account:
+    binance:
+      balances:
+        USDT: 10000.0
+
+exchangeStrategies:
+
+- on: binance
+  support:
+    symbol: LINKUSDT
+    interval: 5m
+    minVolume: 80_000
+    triggerMovingAverage:
+      interval: 5m
+      window: 99
+    longTermMovingAverage:
+      interval: 1h
+      window: 99
+
+    scaleQuantity:
+      byVolume:
+        exp:
+          domain: [ 10_000, 200_000 ]
+          range: [ 0.5, 1.0 ]
+
+    maxBaseAssetBalance: 1000.0
+    minQuoteAssetBalance: 2000.0
+
+    trailingStopTarget:
+      callbackRatio: 1.5%
+      minimumProfitPercentage: 2%
+
+    targets:
+    - profitPercentage: 0.02
+      quantityPercentage: 0.5

@@ -1,0 +1,29 @@
+---
+sessions:
+  max:
+    exchange: max
+    envVarPrefix: MAX
+    takerFeeRate: 0
+    makerFeeRate: 0
+    modifyOrderAmountForFee: false
+  binance:
+    exchange: binance
+    envVarPrefix: BINANCE
+    takerFeeRate: 0
+    makerFeeRate: 0
+    modifyOrderAmountForFee: false
+  ftx:
+    exchange: ftx
+    envVarPrefix: FTX
+    takerFeeRate: 0
+    makerFeeRate: 0
+    modifyOrderAmountForFee: true
+
+exchangeStrategies:
+- on: ["binance"]
+  test:
+    symbol: "BTCUSDT"
+    interval: "1m"
+    baseQuantity: 0.1
+    minDropPercentage: -0.05
+    maxAssetQuantity: 1.1

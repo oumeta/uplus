@@ -1,0 +1,33 @@
+---
+backtest:
+  sessions:
+  - binance
+  startTime: "2022-01-01"
+  endTime: "2022-06-18"
+  symbols:
+  - ETHUSDT
+  accounts:
+    binance:
+      balances:
+        USDT: 20_000.0
+
+exchangeStrategies:
+- on: binance
+  schedule:
+    interval: 1h
+    symbol: ETHUSDT
+    side: buy
+    amount: 20
+
+    aboveMovingAverage:
+      type: EWMA
+      interval: 1h
+      window: 99
+      side: sell
+
+    belowMovingAverage:
+      type: EWMA
+      interval: 1h
+      window: 99
+      side: buy
+

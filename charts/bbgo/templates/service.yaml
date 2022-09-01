@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bbgo.fullname" . }}
+  labels:
+    {{- include "bbgo.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    {{- if .Values.grpc.enabled }}
+    - port: {{ .Values.grpc.port | default 50051 }}
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+    {{- end }}
+  selector:
+    {{- include "bbgo.selectorLabels" . | nindent 4 }}

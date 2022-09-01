@@ -1,0 +1,138 @@
+---
+sessions:
+  binance:
+    exchange: binance
+    envVarPrefix: binance
+    margin: true
+    isolatedMargin: true
+    isolatedMarginSymbol: ETHUSDT
+
+exchangeStrategies:
+- on: binance
+  pivotshort:
+    symbol: ETHUSDT
+
+    # interval is the main pivot interval
+    interval: 5m
+
+    # window is the main pivot window
+    window: 200
+
+    quantity: 10.0
+
+    # when quantity is not given, leverage will be used.
+    # leverage: 10.0
+
+    # breakLow settings are used for shorting when the current price break the previous low
+    breakLow:
+      # ratio is how much the price breaks the previous low to trigger the short.
+      ratio: 0%
+
+      # quantity is used for submitting the sell order
+      # if quantity is not set, all base balance will be used for selling the short.
+      quantity: 10.0
+
+      # marketOrder submits the market sell order when the closed price is lower than the previous pivot low.
+      marketOrder: true
+
+      # bounceRatio is used for calculating the price of the limit sell order.
+      # it's ratio of pivot low bounce when a new pivot low is detected.
+      # Sometimes when the price breaks the previous low, the price might be pulled back to a higher price.
+      # The bounceRatio is useful for such case, however, you might also miss the chance to short at the price if there is no pull back.
+      # Notice: When marketOrder is set, bounceRatio will not be used.
+      # bounceRatio: 0.1%
+
+      # stopEMA is the price range we allow short.
+      # Short-allowed price range = [current price] > [EMA] * (1 - [stopEMARange])
+      # Higher the stopEMARange than higher the chance to open a short
+      stopEMA:
+        interval: 1h
+        window: 99
+        range: 2%
+
+      trendEMA:
+        interval: 1d
+        window: 7
+
+    resistanceShort:
+      enabled: true
+      interval: 5m
+      window: 80
+
+      quantity: 10.0
+
+      # minDistance is used to ignore the place that is too near to the current price
+      minDistance: 5%
+      groupDistance: 1%
+
+      # ratio is the ratio of the resistance price,
+      # higher the ratio, higher the sell price
+      # first_layer_price = resistance_price * (1 + ratio)
+      # second_layer_price = (resistance_price * (1 + ratio)) * (2 * layerSpread)
+      ratio: 1.5%
+      numOfLayers: 3
+      layerSpread: 0.4%
+
+    exits:
+    # (0) roiStopLoss is the stop loss percentage of the position ROI (currently the price change)
+    - roiStopLoss:
+        percentage: 0.8%
+
+    # (1) roiTakeProfit is used to force taking profit by percentage of the position ROI (currently the price change)
+    # force to take the profit ROI exceeded the percentage.
+    - roiTakeProfit:
+        percentage: 35%
+
+    # (2) protective stop loss -- short term
+    - protectiveStopLoss:
+        activationRatio: 0.6%
+        stopLossRatio: 0.1%
+        placeStopOrder: false
+
+    # (3) protective stop loss -- long term
+    - protectiveStopLoss:
+        activationRatio: 5%
+        stopLossRatio: 1%
+        placeStopOrder: false
+
+    # (4) lowerShadowTakeProfit is used to taking profit when the (lower shadow height / low price) > lowerShadowRatio
+    # you can grab a simple stats by the following SQL:
+    # SELECT ((close - low) / close) AS shadow_ratio FROM binance_klines WHERE symbol = 'ETHUSDT' AND `interval` = '5m' AND start_time > '2022-01-01' ORDER BY shadow_ratio DESC LIMIT 20;
+    - lowerShadowTakeProfit:
+        interval: 30m
+        window: 99
+        ratio: 3%
+
+    # (5) cumulatedVolumeTakeProfit is used to take profit when the cumulated quote volume from the klines exceeded a threshold
+    - cumulatedVolumeTakeProfit:
+        interval: 5m
+        window: 2
+        minQuoteVolume: 200_000_000
+
+    - trailingStop:
+        callbackRate: 3%
+
+        # activationRatio is relative to the average cost,
+        # when side is buy, 1% means lower 1% than the average cost.
+        # when side is sell, 1% means higher 1% than the average cost.
+        activationRatio: 40%
+
+        # minProfit uses the position ROI to calculate the profit ratio
+        # minProfit: 1%
+
+        interval: 1m
+        side: buy
+        closePosition: 100%
+
+backtest:
+  sessions:
+  - binance
+  startTime: "2022-01-01"
+  endTime: "2022-06-18"
+  symbols:
+  - ETHUSDT
+  accounts:
+    binance:
+      balances:
+        ETH: 10.0
+        USDT: 5000.0

@@ -1,0 +1,53 @@
+---
+notifications:
+  slack:
+    defaultChannel: "dev-bbgo"
+    errorChannel: "bbgo-error"
+
+  # if you want to route channel by symbol
+  symbolChannels:
+    "^BTC": "btc"
+    "^ETH": "eth"
+
+  # if you want to route channel by exchange session
+  sessionChannels:
+    max: "bbgo-max"
+    binance: "bbgo-binance"
+
+  # routing rules
+  routing:
+    trade: "$silent"
+    order: "$silent"
+    submitOrder: "$silent"
+    pnL: "bbgo-pnl"
+
+persistence:
+  json:
+    directory: var/data
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    db: 0
+
+sessions:
+  max:
+    exchange: max
+    envVarPrefix: max
+
+  binance:
+    exchange: binance
+    envVarPrefix: binance
+    publicOnly: true
+
+crossExchangeStrategies:
+
+- xgap:
+    symbol: "ETHUSDT"
+    sourceExchange: binance
+    tradingExchange: max
+    updateInterval: 1m
+    dailyMaxVolume: 100
+    dailyFeeBudgets:
+      MAX: 100
+    persistence:
+      type: redis

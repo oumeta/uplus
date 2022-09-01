@@ -1,0 +1,44 @@
+sessions:
+  binance:
+    exchange: binance
+    envVarPrefix: binance
+
+exchangeStrategies:
+- on: binance
+  factorzoo:
+    symbol: BTCBUSD
+    linear:
+      enabled: true
+      interval: 1d
+      quantity: 1.0
+      window: 5
+
+    exits:
+      - trailingStop:
+          callbackRate: 1%
+          activationRatio: 1%
+          closePosition: 100%
+          minProfit: 15%
+          interval: 1m
+          side: buy
+      - trailingStop:
+          callbackRate: 1%
+          activationRatio: 1%
+          closePosition: 100%
+          minProfit: 15%
+          interval: 1m
+          side: sell
+
+
+backtest:
+  sessions:
+    - binance
+  startTime: "2021-01-01"
+  endTime: "2022-08-31"
+  symbols:
+    - BTCBUSD
+  accounts:
+    binance:
+      balances:
+        BTC: 1.0
+        BUSD: 40_000.0

@@ -1,0 +1,32 @@
+---
+notifications:
+  slack:
+    defaultChannel: "bbgo"
+    errorChannel: "bbgo-error"
+
+reportPnL:
+- averageCostBySymbols:
+  - "BTCUSDT"
+  - "BNBUSDT"
+  of: binance
+  when:
+  - "@daily"
+  - "@hourly"
+
+sessions:
+  max:
+    exchange: max
+    envVarPrefix: max
+  binance:
+    exchange: binance
+    envVarPrefix: binance
+
+exchangeStrategies:
+- on: max
+  xpuremaker:
+    symbol: MAXUSDT
+    numOrders: 2
+    side: both
+    behindVolume: 1000.0
+    priceTick: 0.001
+    baseQuantity: 100.0
