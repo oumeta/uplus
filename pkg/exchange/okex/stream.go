@@ -2,6 +2,7 @@ package okex
 
 import (
 	"context"
+	"github.com/davecgh/go-spew/spew"
 	"strconv"
 	"time"
 
@@ -191,11 +192,21 @@ func (s *Stream) handleCandleEvent(candle Candle) {
 
 func (s *Stream) createEndpoint(ctx context.Context) (string, error) {
 	var url string
+	//spew.Dump(okexapi.PaperTrade())
 	if s.PublicOnly {
 		url = okexapi.PublicWebSocketURL
 	} else {
 		url = okexapi.PrivateWebSocketURL
 	}
+	if okexapi.PaperTrade() {
+		if s.PublicOnly {
+			url = okexapi.PublicWebSocketURLTest
+		} else {
+			url = okexapi.PrivateWebSocketURLTest
+		}
+	}
+
+	spew.Dump(url)
 	return url, nil
 }
 

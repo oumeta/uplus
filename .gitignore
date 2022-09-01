@@ -29,6 +29,7 @@
 /build
 /dist
 /bbgow*
+/okexgenv
 
 /config/bbgo.yaml
 

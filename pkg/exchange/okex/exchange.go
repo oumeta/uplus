@@ -181,7 +181,7 @@ func (e *Exchange) SubmitOrders(ctx context.Context, orders ...types.SubmitOrder
 
 		// set price field for limit orders
 		switch order.Type {
-		case types.OrderTypeStopLimit, types.OrderTypeLimit:
+		case types.OrderTypeStopLimit, types.OrderTypeLimit, types.OrderTypeLimitMaker:
 			if order.Market.Symbol != "" {
 				orderReq.Price(order.Market.FormatPrice(order.Price))
 			} else {
@@ -198,6 +198,8 @@ func (e *Exchange) SubmitOrders(ctx context.Context, orders ...types.SubmitOrder
 		default:
 			orderReq.OrderType(orderType)
 		}
+
+		orderReq.TradeMode("cash")
 
 		reqs = append(reqs, orderReq)
 	}
@@ -298,24 +300,35 @@ func (e *Exchange) QueryKLines(ctx context.Context, symbol string, interval type
 		return nil, err
 	}
 
-	var klines []types.KLine
-	for _, candle := range candles {
-		klines = append(klines, types.KLine{
-			Exchange:    types.ExchangeOKEx,
-			Symbol:      symbol,
-			Interval:    interval,
-			Open:        candle.Open,
-			High:        candle.High,
-			Low:         candle.Low,
-			Close:       candle.Close,
-			Closed:      true,
-			Volume:      candle.Volume,
-			QuoteVolume: candle.VolumeInCurrency,
-			StartTime:   types.Time(candle.Time),
-			EndTime:     types.Time(candle.Time.Add(interval.Duration() - time.Millisecond)),
-		})
-	}
+	var kLines []types.KLine
 
-	return klines, nil
+	for _, k := range candles {
+
+		kLines = append(kLines, types.KLine{
+			Exchange: types.ExchangeBinance,
+			Symbol:   symbol,
+			Interval: interval,
+
+			StartTime: types.Time(k.Time),
+			EndTime:   types.Time(k.Time.Add(interval.Duration() - time.Millisecond)),
+
+			Open:  k.Open,
+			Close: k.Close,
+			High:  k.High,
+			Low:   k.Low,
+
+			Volume:      k.Volume,
+			QuoteVolume: k.VolumeInCurrency,
+			//TakerBuyBaseAssetVolume:  fixedpoint.MustNewFromString(k.TakerBuyBaseAssetVolume),
+			//TakerBuyQuoteAssetVolume: fixedpoint.MustNewFromString(k.TakerBuyQuoteAssetVolume),
+			LastTradeID: 0,
+			//NumberOfTrades:           uint64(k.),
+			Closed: true,
+		})
+
+	}
+	kLines = types.SortKLinesAscending(kLines)
+
+	return kLines, nil
 
 }
