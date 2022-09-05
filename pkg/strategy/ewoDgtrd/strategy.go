@@ -509,6 +509,18 @@ func (s *Strategy) PlaceBuyOrder(ctx context.Context, price fixedpoint.Value) (*
 		Market:      s.Market,
 		TimeInForce: types.TimeInForceGTC,
 	}
+
+	//buyOrder := types.SubmitOrder{
+	//	Symbol: s.Symbol,
+	//	Side:   types.SideTypeBuy,
+	//	//Type:     types.OrderTypeLimitMaker,
+	//	Type: types.OrderTypeMarket,
+	//
+	//	Quantity: buyQuantity,
+	//	Price:    bidPrice,
+	//	Market:   s.Market,
+	//	GroupID:  s.groupID,
+	//}
 	if err := s.validateOrder(&order); err != nil {
 		log.Infof("validation failed %v: %v", order, err)
 		return closeOrder, nil
@@ -663,11 +675,13 @@ func (s *Strategy) GetLastPrice() fixedpoint.Value {
 // - TP by (lastprice < peak price - atr) || (lastprice > bottom price + atr)
 // - SL by s.StopLoss (Abs(price_diff / price) > s.StopLoss)
 // - entry condition on ewo(Elliott wave oscillator) Crosses ewoSignal(ma on ewo, signalWindow)
-//   * buy signal on (crossover on previous K bar and no crossunder on latest K bar)
-//   * sell signal on (crossunder on previous K bar and no crossunder on latest K bar)
+//   - buy signal on (crossover on previous K bar and no crossunder on latest K bar)
+//   - sell signal on (crossunder on previous K bar and no crossunder on latest K bar)
+//
 // - and filtered by the following rules:
-//   * buy: buy signal ON, kline Close > Open, Close > ma5, Close > ma34, CCI Stochastic Buy signal
-//   * sell: sell signal ON, kline Close < Open, Close < ma5, Close < ma34, CCI Stochastic Sell signal
+//   - buy: buy signal ON, kline Close > Open, Close > ma5, Close > ma34, CCI Stochastic Buy signal
+//   - sell: sell signal ON, kline Close < Open, Close < ma5, Close < ma34, CCI Stochastic Sell signal
+//
 // - or entry when ma34 +- atr * 3 gets touched
 // - entry price: latestPrice +- atr / 2 (short,long), close at market price
 // Cancel non-fully filled orders on new signal (either in same direction or not)

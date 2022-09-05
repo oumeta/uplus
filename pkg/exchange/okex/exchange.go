@@ -2,6 +2,7 @@ package okex
 
 import (
 	"context"
+	"github.com/davecgh/go-spew/spew"
 	"math"
 	"strconv"
 	"time"
@@ -166,6 +167,7 @@ func (e *Exchange) SubmitOrders(ctx context.Context, orders ...types.SubmitOrder
 
 		orderType, err := toLocalOrderType(order.Type)
 		if err != nil {
+			spew.Dump("fuck:", err)
 			return nil, err
 		}
 
@@ -212,6 +214,7 @@ func (e *Exchange) SubmitOrders(ctx context.Context, orders ...types.SubmitOrder
 	}
 
 	for idx, orderHead := range orderHeads {
+		spew.Dump(orderHead)
 		orderID, err := strconv.ParseInt(orderHead.OrderID, 10, 64)
 		if err != nil {
 			return createdOrders, err

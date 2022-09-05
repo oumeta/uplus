@@ -3,6 +3,7 @@ package supertrend
 import (
 	"context"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"os"
 	"sync"
 
@@ -530,6 +531,7 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 
 		// Get order side
 		side := s.getSide(stSignal, demaSignal, lgSignal)
+		spew.Dump(stSignal, demaSignal, lgSignal, side)
 		// Set TP/SL price if needed
 		if side == types.SideTypeBuy {
 			if s.StopLossByTriggeringK {
