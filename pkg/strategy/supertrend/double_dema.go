@@ -1,6 +1,7 @@
 package supertrend
 
 import (
+	"fmt"
 	"github.com/c9s/bbgo/pkg/bbgo"
 	"github.com/c9s/bbgo/pkg/indicator"
 	"github.com/c9s/bbgo/pkg/types"
@@ -26,6 +27,10 @@ func (dd *DoubleDema) getDemaSignal(openPrice float64, closePrice float64) types
 	} else if closePrice < dd.fastDEMA.Last() && closePrice < dd.slowDEMA.Last() && !(openPrice < dd.fastDEMA.Last() && openPrice < dd.slowDEMA.Last()) {
 		demaSignal = types.DirectionDown
 	}
+
+	fmt.Println("\n closeprice,open ,fast,slow,dema", closePrice, openPrice, dd.fastDEMA.Last(), dd.slowDEMA.Last(), demaSignal)
+	fmt.Println("\n up: ", closePrice > dd.fastDEMA.Last(), closePrice > dd.slowDEMA.Last(), openPrice > dd.fastDEMA.Last(), openPrice > dd.slowDEMA.Last())
+	fmt.Println("\n down:", closePrice < dd.fastDEMA.Last(), closePrice < dd.slowDEMA.Last(), openPrice < dd.fastDEMA.Last(), openPrice < dd.slowDEMA.Last())
 
 	return demaSignal
 }

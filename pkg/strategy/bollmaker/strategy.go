@@ -3,6 +3,7 @@ package bollmaker
 import (
 	"context"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"math"
 	"sync"
 
@@ -244,18 +245,21 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 	buyQuantity := s.QuantityOrAmount.CalculateQuantity(bidPrice)
 
 	sellOrder := types.SubmitOrder{
-		Symbol:   s.Symbol,
-		Side:     types.SideTypeSell,
-		Type:     types.OrderTypeLimitMaker,
+		Symbol: s.Symbol,
+		Side:   types.SideTypeSell,
+		Type:   types.OrderTypeLimitMaker,
+		//Type:     types.OrderTypeMarket,
 		Quantity: sellQuantity,
 		Price:    askPrice,
 		Market:   s.Market,
 		GroupID:  s.groupID,
 	}
 	buyOrder := types.SubmitOrder{
-		Symbol:   s.Symbol,
-		Side:     types.SideTypeBuy,
-		Type:     types.OrderTypeLimitMaker,
+		Symbol: s.Symbol,
+		Side:   types.SideTypeBuy,
+		Type:   types.OrderTypeLimitMaker,
+		//Type: types.OrderTypeMarket,
+
 		Quantity: buyQuantity,
 		Price:    bidPrice,
 		Market:   s.Market,
@@ -292,13 +296,18 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 
 	if maxExposurePosition.Sign() > 0 && base.Compare(maxExposurePosition) > 0 {
 		canBuy = false
+		spew.Dump("现货数量大于可持有量，禁止买")
 	}
 
 	if maxExposurePosition.Sign() > 0 {
 		if s.hasLongSet() && base.Sign() < 0 {
 			canSell = false
+			spew.Dump("现货数量小，禁止卖")
+
 		} else if base.Compare(maxExposurePosition.Neg()) < 0 {
 			canSell = false
+			spew.Dump("现货数量小，禁止卖1")
+
 		}
 	}
 
@@ -362,10 +371,14 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 
 	if !hasQuoteBalance || buyOrder.Quantity.Mul(buyOrder.Price).Compare(quoteBalance.Available) > 0 {
 		canBuy = false
+		spew.Dump("钱不够，禁止买")
+
 	}
 
 	if !hasBaseBalance || sellOrder.Quantity.Compare(baseBalance.Available) > 0 {
 		canSell = false
+		spew.Dump("币不够，禁止卖")
+
 	}
 
 	isLongPosition := s.Position.IsLong()
@@ -379,20 +392,27 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 		// for long position if the current price is lower than the minimal profitable price then we should stop sell
 		if midPrice.Compare(minProfitPrice) < 0 {
 			canSell = false
+			spew.Dump("不赚钱，不卖")
+
 		}
 	} else if isShortPosition {
 		// for short position if the current price is higher than the minimal profitable price then we should stop buy
 		if midPrice.Compare(minProfitPrice) > 0 {
 			canBuy = false
+			spew.Dump("空间不够，不买")
+
 		}
 	}
 
 	if s.hasLongSet() && base.Sub(sellOrder.Quantity).Sign() < 0 {
 		canSell = false
+		spew.Dump("量不多，不卖")
 	}
 
 	if s.BuyBelowNeutralSMA && midPrice.Float64() > s.neutralBoll.SMA.Last() {
 		canBuy = false
+		spew.Dump("sma以上，不买")
+
 	}
 
 	if canSell {

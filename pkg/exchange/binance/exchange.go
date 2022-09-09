@@ -1323,6 +1323,11 @@ func (e *Exchange) QueryKLines(ctx context.Context, symbol string, interval type
 
 	var kLines []types.KLine
 	for _, k := range resp {
+		//startTime := time.Unix(k.OpenTime, 0)
+		//endTime := startTime.Add(time.Duration(interval.Duration())*time.Minute - time.Millisecond)
+		isClosed := time.Now().After(types.NewTimeFromUnix(0, k.CloseTime*int64(time.Millisecond)).Time())
+
+		//fmt.Println("isClosed", isClosed)
 		kLines = append(kLines, types.KLine{
 			Exchange:                 types.ExchangeBinance,
 			Symbol:                   symbol,
@@ -1339,7 +1344,7 @@ func (e *Exchange) QueryKLines(ctx context.Context, symbol string, interval type
 			TakerBuyQuoteAssetVolume: fixedpoint.MustNewFromString(k.TakerBuyQuoteAssetVolume),
 			LastTradeID:              0,
 			NumberOfTrades:           uint64(k.TradeNum),
-			Closed:                   true,
+			Closed:                   isClosed,
 		})
 	}
 

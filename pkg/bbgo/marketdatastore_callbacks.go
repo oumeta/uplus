@@ -25,3 +25,13 @@ func (store *MarketDataStore) EmitKLineClosed(k types.KLine) {
 		cb(k)
 	}
 }
+
+func (store *MarketDataStore) OnKLine(cb func(k types.KLine)) {
+	store.kLineUpdateCallbacks = append(store.kLineUpdateCallbacks, cb)
+}
+
+func (store *MarketDataStore) EmitKLine(k types.KLine) {
+	for _, cb := range store.kLineUpdateCallbacks {
+		cb(k)
+	}
+}

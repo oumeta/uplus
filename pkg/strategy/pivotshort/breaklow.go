@@ -2,6 +2,7 @@ package pivotshort
 
 import (
 	"context"
+	"github.com/davecgh/go-spew/spew"
 
 	"github.com/c9s/bbgo/pkg/bbgo"
 	"github.com/c9s/bbgo/pkg/fixedpoint"
@@ -81,7 +82,9 @@ func (s *BreakLow) Bind(session *bbgo.ExchangeSession, orderExecutor *bbgo.Gener
 	s.lastLow = fixedpoint.Zero
 
 	s.pivotLow = standardIndicator.PivotLow(s.IntervalWindow)
-
+	bb := standardIndicator.SMA(s.IntervalWindow)
+	spew.Dump("s.pivotLow", s.pivotLow, s.IntervalWindow)
+	spew.Dump("sma", bb.Last())
 	if s.StopEMA != nil {
 		s.StopEMA.Bind(session, orderExecutor)
 	}
@@ -98,8 +101,14 @@ func (s *BreakLow) Bind(session *bbgo.ExchangeSession, orderExecutor *bbgo.Gener
 
 		s.pilotQuantityCalculation()
 	})
+	spew.Dump(symbol, s.Interval, s.updatePivotLow())
+	callback := func(kline types.KLine) {
+		spew.Dump(kline)
+	}
+	session.MarketDataStream.OnKLineClosed(callback)
 
 	session.MarketDataStream.OnKLineClosed(types.KLineWith(symbol, s.Interval, func(kline types.KLine) {
+
 		if s.updatePivotLow() {
 			// when position is opened, do not send pivot low notify
 			if position.IsOpened(kline.Close) {
@@ -256,11 +265,14 @@ func (s *BreakLow) pilotQuantityCalculation() {
 
 func (s *BreakLow) updatePivotLow() bool {
 	lastLow := fixedpoint.NewFromFloat(s.pivotLow.Last())
+
+	spew.Dump(s.pivotLow)
 	if lastLow.IsZero() || lastLow.Compare(s.lastLow) == 0 {
 		return false
 	}
 
 	s.lastLow = lastLow
 	s.pivotLowPrices = append(s.pivotLowPrices, lastLow)
+	spew.Dump(s.lastLow, s.pivotLowPrices)
 	return true
 }

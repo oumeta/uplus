@@ -208,6 +208,7 @@ func (c *Candle) KLine() types.KLine {
 	endTime := c.StartTime.Add(interval.Duration() - 1*time.Millisecond)
 	return types.KLine{
 		Exchange:    types.ExchangeOKEx,
+		Symbol:      c.Symbol,
 		Interval:    interval,
 		Open:        c.Open,
 		High:        c.High,

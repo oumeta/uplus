@@ -3,6 +3,7 @@ package pivotshort
 import (
 	"context"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"os"
 	"sync"
 
@@ -148,14 +149,22 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 	s.ExitMethods.Bind(session, s.orderExecutor)
 
 	if s.ResistanceShort != nil && s.ResistanceShort.Enabled {
+
+		spew.Dump("fuffff")
 		s.ResistanceShort.Bind(session, s.orderExecutor)
 	}
+	callback := func(kline types.KLine) {
+		spew.Dump(kline)
+	}
+	session.MarketDataStream.OnKLineClosed(callback)
 
 	if s.BreakLow != nil {
+
 		s.BreakLow.Bind(session, s.orderExecutor)
 	}
 
 	if s.FailedBreakHigh != nil {
+
 		s.FailedBreakHigh.Bind(session, s.orderExecutor)
 	}
 

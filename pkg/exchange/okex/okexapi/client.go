@@ -19,9 +19,12 @@ import (
 )
 
 const defaultHTTPTimeout = time.Second * 15
-const RestBaseURL = "https://www.okex.com/"
-const PublicWebSocketURL = "wss://ws.okex.com:8443/ws/v5/public"
-const PrivateWebSocketURL = "wss://ws.okex.com:8443/ws/v5/private"
+
+const RestBaseURL = "https://www.okx.com/"
+const PublicWebSocketURL = "wss://ws.okx.com:8443/ws/v5/public"
+const PrivateWebSocketURL = "wss://ws.okx.com:8443/ws/v5/private"
+const PublicWebSocketURLTest = "wss://wspap.okx.com:8443/ws/v5/public?brokerId=9999"
+const PrivateWebSocketURLTest = "wss://wspap.okx.com:8443/ws/v5/private?brokerId=9999"
 
 type SideType string
 
@@ -57,6 +60,11 @@ const (
 	OrderStatePartiallyFilled OrderState = "partially_filled"
 	OrderStateFilled          OrderState = "filled"
 )
+
+func PaperTrade() bool {
+	v, ok := util.GetEnvVarBool("PAPER_TRADE")
+	return ok && v
+}
 
 type RestClient struct {
 	BaseURL *url.URL
@@ -193,6 +201,10 @@ func (c *RestClient) newAuthenticatedRequest(method, refURL string, params url.V
 	req.Header.Add("OK-ACCESS-SIGN", signature)
 	req.Header.Add("OK-ACCESS-TIMESTAMP", timestamp)
 	req.Header.Add("OK-ACCESS-PASSPHRASE", c.Passphrase)
+
+	if PaperTrade() {
+		req.Header.Add("x-simulated-trading", "1")
+	}
 	return req, nil
 }
 

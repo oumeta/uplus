@@ -1,6 +1,7 @@
 package indicator
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -54,6 +55,7 @@ func (inc *Supertrend) Length() int {
 }
 
 func (inc *Supertrend) Update(highPrice, lowPrice, closePrice float64) {
+	//spew.Dump(inc)
 	if inc.Window <= 0 {
 		panic("window must be greater than 0")
 	}
@@ -100,17 +102,24 @@ func (inc *Supertrend) Update(highPrice, lowPrice, closePrice float64) {
 	} else {
 		inc.trend = inc.previousTrend
 	}
-
+	//spew.Dump("fuck ni ma:", highPrice, lowPrice, closePrice, inc.AverageTrueRange.Last())
+	fmt.Println("inc.previousTrend, inc.closePrice, inc.trend, inc.AverageTrueRange.Last()", inc.previousTrend, inc.closePrice, inc.trend, inc.AverageTrueRange.Last())
 	// Update signal
 	if inc.AverageTrueRange.Last() <= 0 {
 		inc.tradeSignal = types.DirectionNone
+		fmt.Println(1)
 	} else if inc.trend == types.DirectionUp && inc.previousTrend == types.DirectionDown {
 		inc.tradeSignal = types.DirectionUp
+		fmt.Println(2)
 	} else if inc.trend == types.DirectionDown && inc.previousTrend == types.DirectionUp {
 		inc.tradeSignal = types.DirectionDown
+		fmt.Println(3)
 	} else {
 		inc.tradeSignal = types.DirectionNone
+		fmt.Println(4)
 	}
+
+	fmt.Println("fuck ni ma:", highPrice, lowPrice, closePrice, inc.AverageTrueRange.Last(), inc.tradeSignal)
 
 	// Update trend price
 	if inc.trend == types.DirectionDown {
@@ -118,6 +127,9 @@ func (inc *Supertrend) Update(highPrice, lowPrice, closePrice float64) {
 	} else {
 		inc.trendPrices.Push(inc.uptrendPrice)
 	}
+	fmt.Printf("Update supertrend result: closePrice: %v, uptrendPrice: %v, downtrendPrice: %v, trend: %v,"+
+		" tradeSignal: %v, AverageTrueRange.Last(): %v", inc.closePrice, inc.uptrendPrice, inc.downtrendPrice,
+		inc.trend, inc.tradeSignal, inc.AverageTrueRange.Last())
 
 	logst.Debugf("Update supertrend result: closePrice: %v, uptrendPrice: %v, downtrendPrice: %v, trend: %v,"+
 		" tradeSignal: %v, AverageTrueRange.Last(): %v", inc.closePrice, inc.uptrendPrice, inc.downtrendPrice,
@@ -131,6 +143,7 @@ func (inc *Supertrend) GetSignal() types.Direction {
 var _ types.SeriesExtend = &Supertrend{}
 
 func (inc *Supertrend) PushK(k types.KLine) {
+
 	if inc.EndTime != zeroTime && k.EndTime.Before(inc.EndTime) {
 		return
 	}
@@ -143,6 +156,7 @@ func (inc *Supertrend) PushK(k types.KLine) {
 
 func (inc *Supertrend) BindK(target KLineClosedEmitter, symbol string, interval types.Interval) {
 	target.OnKLineClosed(types.KLineWith(symbol, interval, inc.PushK))
+
 }
 
 func (inc *Supertrend) LoadK(allKLines []types.KLine) {

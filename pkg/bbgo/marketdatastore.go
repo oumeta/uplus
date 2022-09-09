@@ -1,11 +1,14 @@
 package bbgo
 
-import "github.com/c9s/bbgo/pkg/types"
+import (
+	"github.com/c9s/bbgo/pkg/types"
+)
 
 const MaxNumOfKLines = 5_000
 const MaxNumOfKLinesTruncate = 100
 
 // MarketDataStore receives and maintain the public market data of a single symbol
+//
 //go:generate callbackgen -type MarketDataStore
 type MarketDataStore struct {
 	Symbol string
@@ -15,6 +18,7 @@ type MarketDataStore struct {
 
 	kLineWindowUpdateCallbacks []func(interval types.Interval, klines types.KLineWindow)
 	kLineClosedCallbacks       []func(k types.KLine)
+	kLineUpdateCallbacks       []func(k types.KLine)
 }
 
 func NewMarketDataStore(symbol string) *MarketDataStore {
@@ -38,6 +42,15 @@ func (store *MarketDataStore) KLinesOfInterval(interval types.Interval) (kLines 
 
 func (store *MarketDataStore) BindStream(stream types.Stream) {
 	stream.OnKLineClosed(store.handleKLineClosed)
+	stream.OnKLine(store.handleKLineUpdate)
+}
+
+func (store *MarketDataStore) handleKLineUpdate(kline types.KLine) {
+	if kline.Symbol != store.Symbol {
+		return
+	}
+
+	store.EmitKLine(kline)
 }
 
 func (store *MarketDataStore) handleKLineClosed(kline types.KLine) {
@@ -49,17 +62,18 @@ func (store *MarketDataStore) handleKLineClosed(kline types.KLine) {
 }
 
 func (store *MarketDataStore) AddKLine(k types.KLine) {
+
 	window, ok := store.KLineWindows[k.Interval]
 	if !ok {
-		var tmp = make(types.KLineWindow, 0, 1000)
+		var tmp = make(types.KLineWindow, 0, KLinePreloadLimit)
 		store.KLineWindows[k.Interval] = &tmp
 		window = &tmp
 	}
 	window.Add(k)
 
-	if len(*window) > MaxNumOfKLines {
-		*window = (*window)[MaxNumOfKLinesTruncate-1:]
-	}
+	//if len(*window) > MaxNumOfKLines {
+	//	*window = (*window)[MaxNumOfKLinesTruncate-1:]
+	//}
 
 	store.EmitKLineClosed(k)
 	store.EmitKLineWindowUpdate(k.Interval, *window)

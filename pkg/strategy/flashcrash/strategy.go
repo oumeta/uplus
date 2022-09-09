@@ -4,6 +4,7 @@ package flashcrash
 
 import (
 	"context"
+	"github.com/davecgh/go-spew/spew"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -76,7 +77,7 @@ func (s *Strategy) updateBidOrders(orderExecutor bbgo.OrderExecutor, session *bb
 	}
 
 	var startPrice = fixedpoint.NewFromFloat(s.ewma.Last()).Mul(s.Percentage)
-
+	spew.Dump(s.ewma.Last(), s.Percentage, startPrice)
 	var submitOrders []types.SubmitOrder
 	for i := 0; i < s.GridNum; i++ {
 		submitOrders = append(submitOrders, types.SubmitOrder{

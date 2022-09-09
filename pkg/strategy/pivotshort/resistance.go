@@ -2,6 +2,7 @@ package pivotshort
 
 import (
 	"context"
+	"github.com/davecgh/go-spew/spew"
 
 	"github.com/c9s/bbgo/pkg/bbgo"
 	"github.com/c9s/bbgo/pkg/datatype/floats"
@@ -47,6 +48,8 @@ func (s *ResistanceShort) Subscribe(session *bbgo.ExchangeSession) {
 }
 
 func (s *ResistanceShort) Bind(session *bbgo.ExchangeSession, orderExecutor *bbgo.GeneralOrderExecutor) {
+	spew.Dump("fucccccc")
+
 	if s.GroupDistance.IsZero() {
 		s.GroupDistance = fixedpoint.NewFromFloat(0.01)
 	}
@@ -68,8 +71,10 @@ func (s *ResistanceShort) Bind(session *bbgo.ExchangeSession, orderExecutor *bbg
 
 	// use the last kline from the history before we get the next closed kline
 	s.updateResistanceOrders(fixedpoint.NewFromFloat(s.resistancePivot.Last()))
+	spew.Dump("33333")
+	s.session.MarketDataStream.OnKLineClosed(types.KLineWith(s.Symbol, s.Interval, func(kline types.KLine) {
 
-	session.MarketDataStream.OnKLineClosed(types.KLineWith(s.Symbol, s.Interval, func(kline types.KLine) {
+		spew.Dump("444444")
 		// trend EMA protection
 		if s.TrendEMA != nil && !s.TrendEMA.GradientAllowed() {
 			return
@@ -79,7 +84,7 @@ func (s *ResistanceShort) Bind(session *bbgo.ExchangeSession, orderExecutor *bbg
 		if position.IsOpened(kline.Close) {
 			return
 		}
-
+		spew.Dump("fuck", kline)
 		s.updateResistanceOrders(kline.Close)
 	}))
 }
@@ -180,7 +185,7 @@ func (s *ResistanceShort) placeResistanceOrders(ctx context.Context, resistanceP
 			MarginSideEffect: types.SideEffectTypeMarginBuy,
 		})
 	}
-
+	spew.Dump(orderForms)
 	createdOrders, err := s.orderExecutor.SubmitOrders(ctx, orderForms...)
 	if err != nil {
 		log.WithError(err).Errorf("can not place resistance order")

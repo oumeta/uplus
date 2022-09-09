@@ -1,6 +1,7 @@
 package supertrend
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/c9s/bbgo/pkg/datatype/floats"
@@ -13,8 +14,8 @@ type LinReg struct {
 	types.SeriesBase
 	types.IntervalWindow
 	// Values are the slopes of linear regression baseline
-	Values floats.Slice
-	klines types.KLineWindow
+	Values  floats.Slice
+	klines  types.KLineWindow
 	EndTime time.Time
 }
 
@@ -94,7 +95,7 @@ func (lr *LinReg) LoadK(allKLines []types.KLine) {
 // GetSignal get linear regression signal
 func (lr *LinReg) GetSignal() types.Direction {
 	var lrSignal types.Direction = types.DirectionNone
-
+	fmt.Println("linear :", lr.Last())
 	switch {
 	case lr.Last() > 0:
 		lrSignal = types.DirectionUp

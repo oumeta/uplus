@@ -201,6 +201,10 @@ type Strategy struct {
 	// StrategyController
 	bbgo.StrategyController
 
+	atr *indicator.ATR
+
+	cci *indicator.CCI
+
 	// Accumulated profit report
 	AccumulatedProfitReport *AccumulatedProfitReport `json:"accumulatedProfitReport"`
 }
@@ -286,6 +290,8 @@ func (s *Strategy) setupIndicators() {
 	if s.SupertrendMultiplier == 0 {
 		s.SupertrendMultiplier = 3
 	}
+
+	fmt.Println("s.Window,  s.Interval", s.Window, s.Interval)
 	s.Supertrend = &indicator.Supertrend{IntervalWindow: types.IntervalWindow{Window: s.Window, Interval: s.Interval}, ATRMultiplier: s.SupertrendMultiplier}
 	s.Supertrend.AverageTrueRange = &indicator.ATR{IntervalWindow: types.IntervalWindow{Window: s.Window, Interval: s.Interval}}
 	s.Supertrend.BindK(s.session.MarketDataStream, s.Symbol, s.Supertrend.Interval)
@@ -425,6 +431,16 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 		s.TradeStats = types.NewTradeStats(s.Symbol)
 	}
 
+	indicators := session.StandardIndicatorSet(s.Symbol)
+	s.atr = indicators.ATR(types.IntervalWindow{
+		Interval: s.Interval,
+		Window:   34,
+	})
+	s.cci = indicators.CCI(types.IntervalWindow{
+		Interval: s.Interval,
+		Window:   34,
+	})
+
 	// Interval profit report
 	if bbgo.IsBackTesting {
 		startTime := s.Environment.StartTime()
@@ -497,7 +513,30 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 		method.Bind(session, s.orderExecutor)
 	}
 
-	session.MarketDataStream.OnKLineClosed(types.KLineWith(s.Symbol, s.Interval, func(kline types.KLine) {
+	session.MarketDataStream.OnKLine(types.KLineWith(s.Symbol, s.Interval, func(kline types.KLine) {
+		// StrategyController
+		//if s.Status != types.StrategyStatusRunning {
+		//	return
+		//}
+		//
+		closePrice := kline.GetClose()
+		openPrice := kline.GetOpen()
+		closePrice64 := closePrice.Float64()
+		openPrice64 := openPrice.Float64()
+
+		// Supertrend signal
+		stSignal := s.Supertrend.GetSignal()
+
+		// DEMA signal
+		demaSignal := s.doubleDema.getDemaSignal(openPrice64, closePrice64)
+		//s.Supertrend = &indicator.Supertrend{IntervalWindow: types.IntervalWindow{Window: s.Window, Interval: s.Interval}, ATRMultiplier: s.SupertrendMultiplier}
+		//s.Supertrend.AverageTrueRange = &indicator.ATR{IntervalWindow: types.IntervalWindow{Window: s.Window, Interval: s.Interval}}
+		s.Supertrend.PushK(kline)
+		fmt.Println("stSignal,dema:", stSignal, demaSignal, openPrice64, closePrice64)
+		fmt.Println("stSignal,k:", kline, kline.StartTime, kline.EndTime)
+	}))
+
+	session.MarketDataStream.OnKLine(types.KLineWith(s.Symbol, s.Interval, func(kline types.KLine) {
 		// StrategyController
 		if s.Status != types.StrategyStatusRunning {
 			return
@@ -513,6 +552,11 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 
 		// DEMA signal
 		demaSignal := s.doubleDema.getDemaSignal(openPrice64, closePrice64)
+		s.atr.RePushK(kline)
+		s.cci.RealPushK(kline)
+
+		fmt.Println(kline)
+		fmt.Println("cci,atr", s.cci.Index(s.cci.Length()-2), s.cci.Last(), s.atr.Last())
 
 		// Linear Regression signal
 		var lgSignal types.Direction
@@ -530,6 +574,7 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 
 		// Get order side
 		side := s.getSide(stSignal, demaSignal, lgSignal)
+		fmt.Println(stSignal, demaSignal, lgSignal, side)
 		// Set TP/SL price if needed
 		if side == types.SideTypeBuy {
 			if s.StopLossByTriggeringK {
