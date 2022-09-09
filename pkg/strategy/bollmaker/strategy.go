@@ -247,8 +247,8 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 	sellOrder := types.SubmitOrder{
 		Symbol: s.Symbol,
 		Side:   types.SideTypeSell,
-		//	Type:     types.OrderTypeLimitMaker,
-		Type:     types.OrderTypeMarket,
+		Type:   types.OrderTypeLimitMaker,
+		//Type:     types.OrderTypeMarket,
 		Quantity: sellQuantity,
 		Price:    askPrice,
 		Market:   s.Market,
@@ -257,8 +257,8 @@ func (s *Strategy) placeOrders(ctx context.Context, midPrice fixedpoint.Value, k
 	buyOrder := types.SubmitOrder{
 		Symbol: s.Symbol,
 		Side:   types.SideTypeBuy,
-		//Type:     types.OrderTypeLimitMaker,
-		Type: types.OrderTypeMarket,
+		Type:   types.OrderTypeLimitMaker,
+		//Type: types.OrderTypeMarket,
 
 		Quantity: buyQuantity,
 		Price:    bidPrice,
@@ -551,7 +551,7 @@ func (s *Strategy) Run(ctx context.Context, orderExecutor bbgo.OrderExecutor, se
 		}
 	})
 
-	session.MarketDataStream.OnKLine(types.KLineWith(s.Symbol, s.Interval, func(kline types.KLine) {
+	session.MarketDataStream.OnKLineClosed(types.KLineWith(s.Symbol, s.Interval, func(kline types.KLine) {
 		// StrategyController
 		if s.Status != types.StrategyStatusRunning {
 			return

@@ -98,11 +98,27 @@ func (inc *ATR) Length() int {
 }
 
 func (inc *ATR) PushK(k types.KLine) {
-	if inc.EndTime != zeroTime && !k.EndTime.After(inc.EndTime) {
+	if (inc.EndTime != zeroTime && !k.EndTime.After(inc.EndTime)) || !k.Closed {
 		return
 	}
 
 	inc.Update(k.High.Float64(), k.Low.Float64(), k.Close.Float64())
 	inc.EndTime = k.EndTime.Time()
 	inc.EmitUpdate(inc.Last())
+}
+
+func (inc *ATR) RePushK(k types.KLine) {
+	if inc.EndTime != zeroTime && !k.EndTime.After(inc.EndTime) && !k.Closed {
+
+		inc.RMA.Values.Pop(int64(inc.RMA.Values.Length() - 1))
+		inc.PercentageVolatility.Pop(int64(inc.PercentageVolatility.Length() - 1))
+		inc.Update(k.High.Float64(), k.Low.Float64(), k.Close.Float64())
+		inc.EndTime = k.EndTime.Time()
+		inc.EmitUpdate(inc.Last())
+		return
+	}
+
+	//inc.Update(k.High.Float64(), k.Low.Float64(), k.Close.Float64())
+	//inc.EndTime = k.EndTime.Time()
+	//inc.EmitUpdate(inc.Last())
 }

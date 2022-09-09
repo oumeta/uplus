@@ -30,6 +30,9 @@
 /dist
 /bbgow*
 /okexgenv
+/binancegenv
+/binancereal
+/rebinance
 
 /config/bbgo.yaml
 
